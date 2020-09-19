@@ -18,6 +18,8 @@ class APIController extends Controller
      * limit = 100
      * order_by = {field=field_name,order=asc}
      * group_by = field
+     * @example 
+     * http://localhost:8000/api/get?from=users&where={id=2,username=test}&order_by={field=id,order=asc}&select=id,full_name
      * @param Request $request
      * @return JsonResponse|void
      */
@@ -49,7 +51,7 @@ class APIController extends Controller
         }
 
         if(!$where){
-            $where = 1;
+            $where = 0;
         }else{
             $where = $this->decorateArray($where);
             foreach ($where as $field=>$value){
@@ -73,9 +75,16 @@ class APIController extends Controller
             if(!Schema::hasColumn($from, $order_by['field'])){
                 return abort(400, "Order by column not found in table");
             }
+            if(!in_array($order_by['order'],['asc','desc','ASC','DESC'])){
+                return abort(400, "Order by column can be sort by only asc or desc");
+            }
         }
 
-        $data = DB::table($from)->select($select)->where($where)->orderBy($order_by['field'], $order_by['order'])->groupBy($group_by)->limit($limit)->get();
+        $data = DB::table($from)->select($select);
+        if($where) {
+            $data->where($where);
+        }
+        $data = $data->orderBy($order_by['field'], $order_by['order'])->groupBy($group_by)->limit($limit)->get();
 
         return response()->json($data);
     }
