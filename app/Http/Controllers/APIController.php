@@ -129,6 +129,17 @@ class APIController extends Controller
         return response()->json("Table updated succesfully.",200);
     }
 
+    /**
+     * @example
+     * curl -X DELETE \
+     *    /api/delete \
+     *   -H 'cache-control: no-cache' \
+     *   -H 'content-type: application/x-www-form-urlencoded' \
+     *   -H 'postman-token: 68ca247d-ed29-281c-96ff-1ec5804f3e88' \
+     *   -d 'id=2&table=users'
+     * @param Request $request
+     * @return JsonResponse|void
+     */
     public function deleteData(Request $request){
         $table = $request->get('table',null);
         $id = $request->get('id',null);

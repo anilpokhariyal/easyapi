@@ -13,6 +13,16 @@ class APIControllerTest extends \TestCase
         $result->assertResponseStatus(200);
     }
 
+    public function testUpdateData(){
+        $result = $this->json('POST','/api/update',['table'=>'users','id'=>1,'data'=>'{username=testing,phone=123456789}']);
+        $result->assertResponseStatus(200);
+    }
+
+    public function testDeleteData(){
+        $result = $this->json('DELETE','/api/delete',['table'=>'users','id'=>1]);
+        $result->assertResponseStatus(200);
+    }
+
     public function testDecorateArray()
     {
         $response = (new APIController())->decorateArray("{id=2,username=test}");
