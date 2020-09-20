@@ -90,6 +90,51 @@ class APIController extends Controller
     }
 
     /**
+     * Create entry in table
+     * @example
+     *   curl -X POST \
+     *    /api/create \
+     *   -H 'cache-control: no-cache' \
+     *   -H 'content-type: application/x-www-form-urlencoded' \
+     *   -H 'postman-token: f5cd31d5-ce84-5326-ff4d-3a2f9664d5b7' \
+     *   -d 'table=users&data=%7Busername%3Dtest%2Cfull_name%3DAnil%20Pokhariyal%2Cphone%3D9675517098%2Cemail%3Dtest%40gmail.com%2Ccity%3Dtest%20city%7D'
+     * @param Request $request
+     * @return JsonResponse|void
+     */
+    public function createData(Request $request){
+        $table = $request->get('table',null);
+        $create = $request->get('data','{}');
+        if(!$table){
+            return abort(400, "table param is required");
+        }
+        if(!Schema::hasTable($table)){
+            return abort(400, "Table does not exits in database");
+        }
+        $create = $this->decorateArray($create);
+        if(count($create)==0){
+            return abort(400,"data param is missing to update");
+        }else{
+            foreach ($create as $field=>$value){
+                if(!Schema::hasColumn($table, $field)){
+                    return abort(400, "Field ".$field." not exists in table which is used in where param");
+                }
+            }
+        }
+
+        $columns = Schema::getColumnListing($table);
+        $param_keys = ['id','created_at','updated_at','deleted_at'];
+        $param_keys = array_merge(array_keys($create),$param_keys);
+        foreach ($columns as $column){
+            if(!in_array($column,$param_keys)){
+                return abort(400, $column." field is required in data");
+            }
+        }
+
+        DB::table($table)->insert($create);
+        return response()->json("Table data created succesfully.",200);
+    }
+
+    /**
      * To update all tables with id param
      * @example
      * curl -X POST \

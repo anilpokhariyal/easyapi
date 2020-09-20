@@ -12,5 +12,6 @@
 */
 
 $router->get('/api/get', 'APIController@getData');
-$router->post('/api/update', 'APIController@updateData');
+$router->post('/api/create', 'APIController@createData');
+$router->put('/api/update', 'APIController@updateData');
 $router->delete('/api/delete', 'APIController@deleteData');
