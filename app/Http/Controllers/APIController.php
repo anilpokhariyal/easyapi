@@ -19,7 +19,7 @@ class APIController extends Controller
      * order_by = {field=field_name,order=asc}
      * group_by = field
      * @example 
-     * http://localhost:8000/api/get?from=users&where={id=2,username=test}&order_by={field=id,order=asc}&select=id,full_name
+     * /api/get?from=users&where={id=2,username=test}&order_by={field=id,order=asc}&select=id,full_name
      * @param Request $request
      * @return JsonResponse|void
      */
@@ -86,7 +86,64 @@ class APIController extends Controller
         }
         $data = $data->orderBy($order_by['field'], $order_by['order'])->groupBy($group_by)->limit($limit)->get();
 
-        return response()->json($data);
+        return response()->json($data,200);
+    }
+
+    /**
+     * To update all tables with id param
+     * @example
+     * curl -X POST \
+     *    /api/update \
+     *   -H 'cache-control: no-cache' \
+     *   -H 'content-type: application/x-www-form-urlencoded' \
+     *   -H 'postman-token: 3f516fa9-0abc-cf62-8d2f-839e90d4b4bd' \
+     *   -d 'table=users&data=%7Bfull_name%3DAnil%20Pokhariyal%2Cphone%3D9699919998%7D&id=1'
+     * @param Request $request
+     * @return JsonResponse|void
+     */
+    public function updateData(Request $request){
+        $table = $request->get('table',null);
+        $update = $request->get('data','{}');
+        $id = $request->get('id',0);
+        if(!$id){
+            return abort(400,"id param is required");
+        }
+        if(!$table){
+            return abort(400, "table param is required");
+        }
+        if(!Schema::hasTable($table)){
+            return abort(400, "Table does not exits in database");
+        }
+        $update = $this->decorateArray($update);
+        if(count($update)==0){
+            return abort(400,"data param is missing to update");
+        }else{
+            foreach ($update as $field=>$value){
+                if(!Schema::hasColumn($table, $field)){
+                    return abort(400, "Field ".$field." not exists in table which is used in where param");
+                }
+            }
+        }
+
+        DB::table($table)->where('id',$id)->update($update);
+        return response()->json("Table updated succesfully.",200);
+    }
+
+    public function deleteData(Request $request){
+        $table = $request->get('table',null);
+        $id = $request->get('id',null);
+        if(!$id){
+            return abort(400,"id param is required");
+        }
+        if(!$table){
+            return abort(400, "table param is required");
+        }
+        if(!Schema::hasTable($table)){
+            return abort(400, "Table does not exits in database");
+        }
+        DB::table($table)->where('id',$id)->delete();
+
+        return response()->json("Table data deleted succesfully.",200);
     }
 
     /**
